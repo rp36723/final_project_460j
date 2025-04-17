@@ -20,11 +20,10 @@ def capture_frames():
             break
         
         #frame variable contains captured frame
-        #call function to detect ASL signs + display wherever else needed
-        #TODO: add function to detect ASL signs
-
         #below simply displays frame back to user
         cv2.imshow("Live Camera Feed", frame)
+        #TODO: call function to detect ASL signs + display wherever else needed
+
         
         #time interval for capturing frames, right now is 1 frame per second
         if cv2.waitKey(1000) & 0xFF == ord('q'):
