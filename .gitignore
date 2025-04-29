@@ -1,0 +1,38 @@
+# Virtual environment
+py310/
+
+# Data files
+*.pickle
+dataset.zip/
+
+# Model files
+*.h5
+*.pth
+model*.pickle
+
+# Notebooks and logs
+*.ipynb
+initial_attempt/
+train_initial_attempt/
+
+test/
+sign-language-recognition-project/
+gpt_generated_attempt/
+
+# Caches
+test/**/__pycache__/
+**/__pycache__/
+
+# Dataset folders (ignore large image sets)
+asl_alphabet_train/
+dataset/
+
+# Media folders
+media/
+
+# Output models
+output_models/
+
+# OS files
+.DS_Store
+Thumbs.db
