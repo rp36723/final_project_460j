@@ -8,7 +8,6 @@ dataset.zip/
 # Model files
 *.h5
 *.pth
-model*.pickle
 
 # Notebooks and logs
 train_initial_attempt/
