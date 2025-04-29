@@ -11,13 +11,9 @@ dataset.zip/
 model*.pickle
 
 # Notebooks and logs
-*.ipynb
-initial_attempt/
 train_initial_attempt/
 
 test/
-sign-language-recognition-project/
-gpt_generated_attempt/
 
 # Caches
 test/**/__pycache__/
