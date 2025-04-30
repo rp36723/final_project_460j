@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA
 from imblearn.over_sampling import SMOTE
 
 print("Loading data...")
-data_dict = pickle.load(open('data_gpt.pickle', 'rb'))
+data_dict = pickle.load(open('../dataset/data_gpt.pickle', 'rb'))
 
 # Get the new data format (should be normalized landmarks with angle features)
 data_list = data_dict['data']

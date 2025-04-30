@@ -5,14 +5,29 @@ import numpy as np
 import time
 
 # Load the model with preprocessing pipeline
-print("Loading model...")
-model_dict = pickle.load(open('model1.pickle', 'rb'))
-model = model_dict['model']  # This should now be the full pipeline
+print("Loading models for ensemble...")
+model_dict1 = pickle.load(open('model_gpt.pickle', 'rb'))
+model1 = model_dict1['model']
+# Load second model
+model_dict2 = pickle.load(open('model.pickle', 'rb'))
+model2 = model_dict2['model']
 
+# Ensemble prediction: average probabilities
+from sklearn.utils.validation import check_array
+
+def ensemble_predict_proba(features_gpt, features_old):
+    # Predict with GPT-trained model (expects 64 features)
+    p1 = model1.predict_proba([features_gpt])
+    # Predict with original model (expects 42 features)
+    p2 = model2.predict_proba([features_old])
+    # Average probabilities
+    return (p1 + p2) / 2
+
+# Use the ensemble for predictions
 # Get metadata
-feature_count = model_dict.get('features', 63)  # Default to 63 (21 landmarks × 3 coordinates)
-model_type = model_dict.get('model_type', 'Unknown')
-classes = model_dict.get('classes', None)
+feature_count = model_dict1.get('features', 63)  # Default to 63 (21 landmarks × 3 coordinates)
+model_type = model_dict1.get('model_type', 'Unknown')
+classes = model_dict1.get('classes', None)
 print(f"Loaded {model_type} model with {feature_count} features")
 
 # Set up MediaPipe
@@ -113,7 +128,7 @@ def calculate_angle_features(landmarks):
 # Variables for tracking predictions
 last_predictions = []  # For temporal smoothing
 prediction_smooth_window = 5
-confidence_threshold = 0.6  # Minimum confidence to display a prediction
+confidence_threshold = 0.3  # Minimum confidence to display a prediction
 last_timestamp = 0
 fps = 0
 
@@ -193,13 +208,9 @@ while True:
     # Extract features using the same methods as training
     hand_landmarks = results.multi_hand_landmarks[0]  # Use first hand
     
-    # Get normalized landmarks
+    # Get normalized landmarks (64 features)
     normalized_data = normalize_landmarks(hand_landmarks)
-    
-    # Add angle features
     angle_features = calculate_angle_features(hand_landmarks)
-    
-    # Combine features
     all_features = normalized_data + angle_features
     
     # Ensure the right feature length (pad or truncate if needed)
@@ -208,13 +219,19 @@ while True:
     elif len(all_features) < feature_count:
         all_features = all_features + [0] * (feature_count - len(all_features))
     
-    # Make prediction (model has preprocessing + classifier)
+    # Prepare feature set for original model: raw x,y coords (42 features)
+    original_xy = []
+    for lm in hand_landmarks.landmark:
+        original_xy.extend([lm.x, lm.y])
+    # Ensure correct length
+    original_xy = original_xy[:42]
+    
+    # Make prediction using ensemble
     try:
-        # Get prediction and confidence
-        letter_proba = model.predict_proba([np.array(all_features)])
+        letter_proba = ensemble_predict_proba(all_features, original_xy)
         best_idx = np.argmax(letter_proba)
         confidence = letter_proba[0][best_idx]
-        predicted_label = model.classes_[best_idx]
+        predicted_label = model1.classes_[best_idx]
         
         # Add to prediction history for smoothing
         last_predictions.append((predicted_label, confidence))
