@@ -7,17 +7,18 @@ from autocorrect import Speller
 import re
 import threading
 from textblob import TextBlob
+
 spell = Speller(lang='en')
 
 
 
 # Load the model with preprocessing pipeline
 print("Loading models for ensemble...")
-model_dict1 = pickle.load(open('1.pickle', 'rb'))
+model_dict1 = pickle.load(open('model_1.pickle', 'rb'))
 model1 = model_dict1['model']
-# Load second model
-model_dict2 = pickle.load(open('model.pickle', 'rb'))
-model2 = model_dict2['model']
+
+print("Advanced model (model_1.pickle) hyperparameters:")
+print(model1.get_params())
 
 # Ensemble prediction: average probabilities
 from sklearn.utils.validation import check_array
@@ -25,10 +26,8 @@ from sklearn.utils.validation import check_array
 def ensemble_predict_proba(features_1, features_old):
     # Predict with advanced trained model (expects 64 features)
     p1 = model1.predict_proba([features_1])
-    # Predict with original model (expects 42 features)
-    p2 = model2.predict_proba([features_old])
     # Average probabilities
-    return (p1 + p2) / 2
+    return p1
 
 # Use the ensemble for predictions
 # Get metadata

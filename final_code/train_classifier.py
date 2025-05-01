@@ -95,8 +95,6 @@ print("Setting up preprocessing pipeline...")
 # Start with scaling to normalize the features
 preprocessing = Pipeline([
     ('scaler', StandardScaler()),
-    # Optional: Uncomment to use PCA if you have many features
-    # ('pca', PCA(n_components=0.95))  # Keep 95% of variance
 ])
 
 # Fit preprocessing on training data
