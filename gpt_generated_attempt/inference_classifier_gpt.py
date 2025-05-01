@@ -3,6 +3,13 @@ import mediapipe as mp
 import pickle
 import numpy as np
 import time
+from autocorrect import Speller
+import re
+import threading
+from textblob import TextBlob
+spell = Speller(lang='en')
+
+
 
 # Load the model with preprocessing pipeline
 print("Loading models for ensemble...")
@@ -128,7 +135,7 @@ def calculate_angle_features(landmarks):
 # Variables for tracking predictions
 last_predictions = []  # For temporal smoothing
 prediction_smooth_window = 5
-confidence_threshold = 0.3  # Minimum confidence to display a prediction
+confidence_threshold = 0.6  # Minimum confidence to display a prediction
 last_timestamp = 0
 fps = 0
 
@@ -139,10 +146,15 @@ letter_hold_frames = 0
 required_hold_frames = 10  # Number of frames a letter must be detected consistently
 cooldown_frames = 0
 required_cooldown = 15  # Frames to wait after adding a letter
-
-print("Ready! Press ESC to exit.")
+appended = 0
+autocorrect_frames = 250
+hand_detected = False
+pending_word = None
+corrected_word = None
+correction_thread = None
 
 while True:
+    # print(current_text)
     # Measure FPS
     current_time = time.time()
     if last_timestamp:
@@ -181,6 +193,7 @@ while True:
     display_frame = np.vstack([frame, status_bg])
     
     # No hand detected
+    hand_detected = results.multi_hand_landmarks is not None
     if not results.multi_hand_landmarks:
         cv2.putText(
             display_frame, "No hand detected", 
@@ -262,27 +275,57 @@ while True:
                     
             predicted_label = best_label
             confidence = max_conf
+
+            # if autocorrect_frames > 0 and not hand_detected:
+            #     print(autocorrect_frames)
+            #     autocorrect_frames -= 1
+            # elif autocorrect_frames == 0 and current_text:
+            #     word_arr = current_text.split()
+            #     if word_arr:
+            #         # autocorrect the last word only if list is non-empty
+            #         corrected = spell(word_arr[-1])
+            #         word_arr[-1] = corrected
+            #         current_text = " ".join(word_arr)
+            #     # reset autocorrect timer
+            #     autocorrect_frames = 250
             
-            # Handle letter adding logic for fingerspelling
-            if cooldown_frames > 0:
-                cooldown_frames -= 1
-                
+
+
+            # Autocorrect only when the third space has been entered (i.e. after typing three words)
+            if current_text.endswith(" "):
+                 words = current_text.rstrip().split()
+                 if words:
+                    last_word = words[-1]
+                    corrected  = str(TextBlob(last_word).correct())
+                    print(f"Corrected: {corrected}")
+                    current_text = " ".join(words[:-1]) + " " + corrected + " "
+        # … update current_text with corrected …
+
             # Check if this is a consistently detected letter
             if last_letter == predicted_label:
-                letter_hold_frames += 1
+                if letter_hold_frames <= required_hold_frames:
+                    letter_hold_frames += 1
                 
-                # If held long enough and confidence is high, add to text
-                if letter_hold_frames > required_hold_frames and confidence > confidence_threshold and cooldown_frames == 0:
-                    if predicted_label != last_letter or not current_text:
-                        current_text += labels_dict.get(predicted_label, predicted_label)
-                        cooldown_frames = required_cooldown
+                
+                if letter_hold_frames >= required_hold_frames and appended == 0:
+                    appended = 1
+                    print(f"Appending: {predicted_label}")
+                    if predicted_label != "space" and predicted_label != "del":
+                        current_text += labels_dict.get(predicted_label, predicted_label).lower()
+                    elif predicted_label == "space":
+                        current_text += " "
+                    elif predicted_label == "del":
+                        current_text = current_text[:-1] if current_text else ""
+
             else:
                 # Reset the counter if letter changed
+                appended = 0
                 letter_hold_frames = 0
                 last_letter = predicted_label
-                    
+            
             # Display the prediction with confidence
             if confidence > confidence_threshold:
+
                 letter_text = labels_dict.get(predicted_label, predicted_label)
                 cv2.putText(
                     frame, f"{letter_text} ({confidence:.2f})", 
