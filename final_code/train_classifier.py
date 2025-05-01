@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA
 from imblearn.over_sampling import SMOTE
 
 print("Loading data...")
-data_dict = pickle.load(open('../dataset/data_gpt.pickle', 'rb'))
+data_dict = pickle.load(open('../dataset/data_1.pickle', 'rb'))
 
 # Get the new data format (should be normalized landmarks with angle features)
 data_list = data_dict['data']
@@ -232,6 +232,6 @@ model_data = {
 }
 
 print("\nSaving the model and metadata...")
-with open('model_gpt.pickle', 'wb') as f:
+with open('model_1.pickle', 'wb') as f:
     pickle.dump(model_data, f)
-print("Model saved to model_gpt.pickle")
+print("Model saved to model_1.pickle")

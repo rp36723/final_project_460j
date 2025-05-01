@@ -180,9 +180,9 @@ print(f"Processed {total_count} images, discarded {discard_count} ({discard_perc
 # Only save if we have data
 if len(data) > 0:
     print(f"Final dataset size: {len(data)} samples from {len(set(labels))} classes")
-    f = open('data_gpt.pickle', 'wb')
+    f = open('data_1.pickle', 'wb')
     pickle.dump({'data': data, 'labels': labels}, f)
     f.close()
-    print("Dataset saved to data_gpt.pickle")
+    print("Dataset saved to data_1.pickle")
 else:
     print("No data was collected! Check your dataset structure and paths.")
