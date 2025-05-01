@@ -1,5 +1,8 @@
 # final_project_460j
-A real time ASL to text translator autocorrected with an LLM
+A real time ASL to text translator with autocorrection feature
+
+# Names
+Andres Wearden, Rishabh Pandey, Joshua Benjamin, Pranav Chinta, Sathvik Reddy, Aakash Gupta
 
 # usage:
 1. create conda env: 'conda create --name <env_name>
